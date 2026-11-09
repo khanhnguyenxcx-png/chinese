@@ -7,48 +7,52 @@ st.set_page_config(
     page_title="HSK 1 Learning Hub", page_icon="🇨🇳", layout="wide"
 )
 
-# Custom Quizlet-like CSS styling
+# Custom Quizlet-like CSS styling with full-width card layout
 st.markdown(
     """
     <style>
-    /* Global Styles */
+    /* Global Styles & Full Width Layout */
     .stApp {
         background-color: #F6F7FB;
     }
     
-    /* Quizlet-style Card Container */
+    /* Hide default Streamlit padding/headers to maximize space */
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+        max-width: 100% !important;
+    }
+    
+    /* Full-screen Quizlet-style Card Container */
     .quizlet-card {
         background-color: #FFFFFF;
         border: 2px solid #E2E8F0;
-        border-radius: 16px;
-        padding: 48px 24px;
+        border-radius: 20px;
+        padding: 80px 40px;
         box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
         text-align: center;
-        margin-bottom: 24px;
-        transition: all 0.2s ease-in-out;
+        width: 100%;
+        min-height: 400px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 20px;
     }
     
-    /* Font Sizing */
-    .card-label {
-        font-size: 1.1rem !important;
-        font-weight: 700 !important;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        color: #64748B;
-        margin-bottom: 16px;
-    }
+    /* Typography sizing */
     .main-text {
-        font-size: 4rem !important;
+        font-size: 5rem !important;
         font-weight: 700 !important;
         color: #1E293B;
-        margin: 12px 0;
+        margin: 16px 0;
         line-height: 1.2;
     }
     .secondary-text {
-        font-size: 2.2rem !important;
+        font-size: 2.8rem !important;
         font-weight: 500 !important;
         color: #3B82F6;
-        margin-top: 8px;
+        margin-top: 12px;
     }
     .kaiti-font {
         font-family: 'KaiTi', 'STKaiti', 'AR PL Kaiti M GB', serif !important;
@@ -58,8 +62,8 @@ st.markdown(
     div.stButton > button {
         border-radius: 12px !important;
         font-weight: 600 !important;
-        padding: 12px 24px !important;
-        font-size: 1.1rem !important;
+        padding: 14px 28px !important;
+        font-size: 1.2rem !important;
     }
     </style>
 """,
@@ -525,17 +529,6 @@ font_class = "kaiti-font" if font_choice == "KaiTi (楷体)" else ""
 # 1. FLASHCARDS MODE
 # -------------------------------------------------------------
 if app_mode == "Flashcards":
-  st.title("📇 Flashcards")
-
-  card_layout = st.radio(
-      "Card Direction:",
-      (
-          "Option 1: Meaning + Pinyin (Front) ➔ Chinese Character (Back)",
-          "Option 2: Chinese Character (Front) ➔ Meaning + Pinyin (Back)",
-      ),
-      horizontal=True,
-  )
-
   vocab_list = st.session_state.vocab_list
   if not vocab_list:
     st.warning("No vocabulary available. Please add words.")
@@ -545,96 +538,56 @@ if app_mode == "Flashcards":
 
     current_card = vocab_list[st.session_state.fc_index]
 
-    # Centered container for Flashcard
-    _, col2, _ = st.columns([0.1, 0.8, 0.1])
-
-    with col2:
-      # Progress Bar & Counter
-      st.caption(
-          f"CARD {st.session_state.fc_index + 1} OF {len(vocab_list)}"
+    # Full Width Flashcard UI
+    if not st.session_state.show_answer:
+      # Front side: Meaning + Pinyin
+      st.markdown(
+          f"""
+                <div class="quizlet-card">
+                    <div class="main-text">{current_card['meaning']}</div>
+                    <div class="secondary-text">{current_card['pinyin']}</div>
+                </div>
+            """,
+          unsafe_allow_html=True,
       )
-      st.progress((st.session_state.fc_index + 1) / len(vocab_list))
+      if st.button("🔄 Click to Flip", use_container_width=True):
+        st.session_state.show_answer = True
+        st.rerun()
+    else:
+      # Back side: Chinese Character
+      st.markdown(
+          f"""
+                <div class="quizlet-card">
+                    <div class="main-text {font_class}">{current_card['chinese']}</div>
+                </div>
+            """,
+          unsafe_allow_html=True,
+      )
 
-      if "Option 1" in card_layout:
-        if not st.session_state.show_answer:
-          # Front side: Meaning + Pinyin
-          st.markdown(
-              f"""
-                        <div class="quizlet-card">
-                            <div class="card-label">Meaning</div>
-                            <div class="main-text">{current_card['meaning']}</div>
-                            <div class="secondary-text">{current_card['pinyin']}</div>
-                        </div>
-                    """,
-              unsafe_allow_html=True,
-          )
-          if st.button("🔄 Click to Flip", use_container_width=True):
-            st.session_state.show_answer = True
-            st.rerun()
-        else:
-          # Back side: Chinese Character
-          st.markdown(
-              f"""
-                        <div class="quizlet-card">
-                            <div class="card-label">Chinese Character</div>
-                            <div class="main-text {font_class}">{current_card['chinese']}</div>
-                        </div>
-                    """,
-              unsafe_allow_html=True,
-          )
+    # Rating Buttons on Answer Reveal
+    if st.session_state.show_answer:
+      st.markdown("### Rate recall:")
+      b1, b2, b3, b4 = st.columns(4)
 
-      else:
-        if not st.session_state.show_answer:
-          # Front side: Chinese Character
-          st.markdown(
-              f"""
-                        <div class="quizlet-card">
-                            <div class="card-label">Chinese Character</div>
-                            <div class="main-text {font_class}">{current_card['chinese']}</div>
-                        </div>
-                    """,
-              unsafe_allow_html=True,
-          )
-          if st.button("🔄 Click to Flip", use_container_width=True):
-            st.session_state.show_answer = True
-            st.rerun()
-        else:
-          # Back side: Meaning + Pinyin
-          st.markdown(
-              f"""
-                        <div class="quizlet-card">
-                            <div class="card-label">Meaning & Pinyin</div>
-                            <div class="main-text">{current_card['meaning']}</div>
-                            <div class="secondary-text">{current_card['pinyin']}</div>
-                        </div>
-                    """,
-              unsafe_allow_html=True,
-          )
+      def next_card():
+        st.session_state.show_answer = False
+        st.session_state.fc_index = (
+            st.session_state.fc_index + 1
+        ) % len(vocab_list)
+        st.rerun()
 
-      # Rating Buttons on Answer Reveal
-      if st.session_state.show_answer:
-        st.markdown("### Rate recall:")
-        b1, b2, b3, b4 = st.columns(4)
-
-        def next_card():
-          st.session_state.show_answer = False
-          st.session_state.fc_index = (
-              st.session_state.fc_index + 1
-          ) % len(vocab_list)
-          st.rerun()
-
-        with b1:
-          if st.button("🔴 Again", use_container_width=True):
-            next_card()
-        with b2:
-          if st.button("🟠 Hard", use_container_width=True):
-            next_card()
-        with b3:
-          if st.button("🟢 Good", use_container_width=True):
-            next_card()
-        with b4:
-          if st.button("⭐ Easy", use_container_width=True):
-            next_card()
+      with b1:
+        if st.button("🔴 Again", use_container_width=True):
+          next_card()
+      with b2:
+        if st.button("🟠 Hard", use_container_width=True):
+          next_card()
+      with b3:
+        if st.button("🟢 Good", use_container_width=True):
+          next_card()
+      with b4:
+        if st.button("⭐ Easy", use_container_width=True):
+          next_card()
 
 # -------------------------------------------------------------
 # 2. MULTIPLE CHOICE QUIZ MODE
@@ -679,7 +632,7 @@ elif app_mode == "Multiple Choice Quiz":
       st.markdown(
           f"""
                 <div class="quizlet-card">
-                    <div class="card-label">What is the meaning & pinyin of:</div>
+                    <div style="font-size: 1.2rem; color: #64748B; margin-bottom: 10px;">What is the meaning & pinyin of:</div>
                     <div class="main-text {font_class}">{correct['chinese']}</div>
                 </div>
             """,
@@ -689,7 +642,7 @@ elif app_mode == "Multiple Choice Quiz":
       st.markdown(
           f"""
                 <div class="quizlet-card">
-                    <div class="card-label">Select the correct character for:</div>
+                    <div style="font-size: 1.2rem; color: #64748B; margin-bottom: 10px;">Select the correct character for:</div>
                     <div class="main-text">{correct['meaning']}</div>
                     <div class="secondary-text">{correct['pinyin']}</div>
                 </div>
