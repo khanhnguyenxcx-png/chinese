@@ -4,7 +4,66 @@ import streamlit as st
 
 # Page Config
 st.set_page_config(
-    page_title="HSK 1 Anki & AI Learning Hub", page_icon="🇨🇳", layout="wide"
+    page_title="HSK 1 Learning Hub", page_icon="🇨🇳", layout="wide"
+)
+
+# Custom Quizlet-like CSS styling
+st.markdown(
+    """
+    <style>
+    /* Global Styles */
+    .stApp {
+        background-color: #F6F7FB;
+    }
+    
+    /* Quizlet-style Card Container */
+    .quizlet-card {
+        background-color: #FFFFFF;
+        border: 2px solid #E2E8F0;
+        border-radius: 16px;
+        padding: 48px 24px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+        text-align: center;
+        margin-bottom: 24px;
+        transition: all 0.2s ease-in-out;
+    }
+    
+    /* Font Sizing */
+    .card-label {
+        font-size: 1.1rem !important;
+        font-weight: 700 !important;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #64748B;
+        margin-bottom: 16px;
+    }
+    .main-text {
+        font-size: 4rem !important;
+        font-weight: 700 !important;
+        color: #1E293B;
+        margin: 12px 0;
+        line-height: 1.2;
+    }
+    .secondary-text {
+        font-size: 2.2rem !important;
+        font-weight: 500 !important;
+        color: #3B82F6;
+        margin-top: 8px;
+    }
+    .kaiti-font {
+        font-family: 'KaiTi', 'STKaiti', 'AR PL Kaiti M GB', serif !important;
+    }
+
+    /* Buttons Styling */
+    div.stButton > button {
+        border-radius: 12px !important;
+        font-weight: 600 !important;
+        padding: 12px 24px !important;
+        font-size: 1.1rem !important;
+    }
+    </style>
+""",
+    unsafe_allow_html=True,
 )
 
 # Initialize Session State for Vocabulary
@@ -443,11 +502,11 @@ if "show_answer" not in st.session_state:
   st.session_state.show_answer = False
 
 # Sidebar Navigation & Settings
-st.sidebar.title("🇨🇳 HSK 1 Learning Suite")
+st.sidebar.title("🟦 Quizlet HSK 1")
 app_mode = st.sidebar.radio(
     "Choose Mode:",
     [
-        "Flashcards (Anki-style)",
+        "Flashcards",
         "Multiple Choice Quiz",
         "Add New Words",
         "AI Tutor",
@@ -457,167 +516,131 @@ app_mode = st.sidebar.radio(
 st.sidebar.markdown("---")
 st.sidebar.subheader("🎨 Display Settings")
 font_choice = st.sidebar.selectbox(
-    "Chinese Font Style:", ("Standard / Sans-Serif", "KaiTi (楷体)")
+    "Chinese Font Style:", ("KaiTi (楷体)", "Standard / Sans-Serif")
 )
 
-
-# Helper function to apply KaiTi font if selected
-def display_chinese(text):
-  if font_choice == "KaiTi (楷体)":
-    return f"<span style='font-family: KaiTi, STKaiti, AR PL Kaiti M GB, serif;'>{text}</span>"
-  return text
-
+font_class = "kaiti-font" if font_choice == "KaiTi (楷体)" else ""
 
 # -------------------------------------------------------------
 # 1. FLASHCARDS MODE
 # -------------------------------------------------------------
-if app_mode == "Flashcards (Anki-style)":
-  st.title("📇 HSK 1 Flashcards")
-  st.markdown(
-      "Practice your vocabulary with spaced-repetition styling. Select your"
-      " card layout below."
-  )
+if app_mode == "Flashcards":
+  st.title("📇 Flashcards")
 
   card_layout = st.radio(
-      "Flashcard Layout Option:",
+      "Card Direction:",
       (
-          "Option 1: Meaning (Front) → Chinese & Pinyin (Back)",
-          "Option 2: Chinese & Pinyin (Front) → Meaning (Back)",
+          "Option 1: Meaning + Pinyin (Front) ➔ Chinese Character (Back)",
+          "Option 2: Chinese Character (Front) ➔ Meaning + Pinyin (Back)",
       ),
+      horizontal=True,
   )
 
   vocab_list = st.session_state.vocab_list
   if not vocab_list:
-    st.warning(
-        "No vocabulary available. Please add new words in the 'Add New Words'"
-        " tab."
-    )
+    st.warning("No vocabulary available. Please add words.")
   else:
     if st.session_state.fc_index >= len(vocab_list):
       st.session_state.fc_index = 0
 
     current_card = vocab_list[st.session_state.fc_index]
 
-    st.markdown("---")
-    col1, col2, col3 = st.columns([1, 2, 1])
+    # Centered container for Flashcard
+    _, col2, _ = st.columns([0.1, 0.8, 0.1])
 
     with col2:
-      card_container = st.container(border=True)
-      with card_container:
-        st.write(
-            f"**Card {st.session_state.fc_index + 1} of {len(vocab_list)}**"
-        )
-        st.markdown("<br>", unsafe_allow_html=True)
+      # Progress Bar & Counter
+      st.caption(
+          f"CARD {st.session_state.fc_index + 1} OF {len(vocab_list)}"
+      )
+      st.progress((st.session_state.fc_index + 1) / len(vocab_list))
 
-        if "Option 1" in card_layout:
-          if not st.session_state.show_answer:
-            st.markdown(
-                "<h2 style='text-align: center; color: #4A90E2;'>Meaning:</h2>",
-                unsafe_allow_html=True,
-            )
-            st.markdown(
-                f"<h1 style='text-align: center;'>{current_card['meaning']}</h1>",
-                unsafe_allow_html=True,
-            )
-            st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("Flip Card", use_container_width=True):
-              st.session_state.show_answer = True
-              st.rerun()
-          else:
-            st.markdown(
-                "<h3 style='text-align: center; color: #4A90E2;'>Meaning:</h3>",
-                unsafe_allow_html=True,
-            )
-            st.markdown(
-                f"<h3 style='text-align: center;'>{current_card['meaning']}</h3>",
-                unsafe_allow_html=True,
-            )
-            st.markdown("---")
-            st.markdown(
-                "<h3 style='text-align: center; color: #E74C3C;'>Chinese &"
-                " Pinyin:</h3>",
-                unsafe_allow_html=True,
-            )
-            st.markdown(
-                f"<h1 style='text-align: center;'>{display_chinese(current_card['chinese'])}</h1>",
-                unsafe_allow_html=True,
-            )
-            st.markdown(
-                f"<h3 style='text-align: center; color: gray;'>{current_card['pinyin']}</h3>",
-                unsafe_allow_html=True,
-            )
-
+      if "Option 1" in card_layout:
+        if not st.session_state.show_answer:
+          # Front side: Meaning + Pinyin
+          st.markdown(
+              f"""
+                        <div class="quizlet-card">
+                            <div class="card-label">Meaning</div>
+                            <div class="main-text">{current_card['meaning']}</div>
+                            <div class="secondary-text">{current_card['pinyin']}</div>
+                        </div>
+                    """,
+              unsafe_allow_html=True,
+          )
+          if st.button("🔄 Click to Flip", use_container_width=True):
+            st.session_state.show_answer = True
+            st.rerun()
         else:
-          if not st.session_state.show_answer:
-            st.markdown(
-                "<h2 style='text-align: center; color: #E74C3C;'>Chinese &"
-                " Pinyin:</h2>",
-                unsafe_allow_html=True,
-            )
-            st.markdown(
-                f"<h1 style='text-align: center;'>{display_chinese(current_card['chinese'])}</h1>",
-                unsafe_allow_html=True,
-            )
-            st.markdown(
-                f"<h3 style='text-align: center; color: gray;'>{current_card['pinyin']}</h3>",
-                unsafe_allow_html=True,
-            )
-            st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("Flip Card", use_container_width=True):
-              st.session_state.show_answer = True
-              st.rerun()
-          else:
-            st.markdown(
-                "<h3 style='text-align: center; color: #E74C3C;'>Chinese &"
-                " Pinyin:</h3>",
-                unsafe_allow_html=True,
-            )
-            st.markdown(
-                f"<h2 style='text-align: center;'>{display_chinese(current_card['chinese'])} ({current_card['pinyin']})</h2>",
-                unsafe_allow_html=True,
-            )
-            st.markdown("---")
-            st.markdown(
-                "<h3 style='text-align: center; color: #4A90E2;'>Meaning:</h3>",
-                unsafe_allow_html=True,
-            )
-            st.markdown(
-                f"<h1 style='text-align: center;'>{current_card['meaning']}</h1>",
-                unsafe_allow_html=True,
-            )
+          # Back side: Chinese Character
+          st.markdown(
+              f"""
+                        <div class="quizlet-card">
+                            <div class="card-label">Chinese Character</div>
+                            <div class="main-text {font_class}">{current_card['chinese']}</div>
+                        </div>
+                    """,
+              unsafe_allow_html=True,
+          )
 
-    if st.session_state.show_answer:
-      st.markdown("### Rate your recall:")
-      b1, b2, b3, b4 = st.columns(4)
+      else:
+        if not st.session_state.show_answer:
+          # Front side: Chinese Character
+          st.markdown(
+              f"""
+                        <div class="quizlet-card">
+                            <div class="card-label">Chinese Character</div>
+                            <div class="main-text {font_class}">{current_card['chinese']}</div>
+                        </div>
+                    """,
+              unsafe_allow_html=True,
+          )
+          if st.button("🔄 Click to Flip", use_container_width=True):
+            st.session_state.show_answer = True
+            st.rerun()
+        else:
+          # Back side: Meaning + Pinyin
+          st.markdown(
+              f"""
+                        <div class="quizlet-card">
+                            <div class="card-label">Meaning & Pinyin</div>
+                            <div class="main-text">{current_card['meaning']}</div>
+                            <div class="secondary-text">{current_card['pinyin']}</div>
+                        </div>
+                    """,
+              unsafe_allow_html=True,
+          )
 
-      def next_card():
-        st.session_state.show_answer = False
-        st.session_state.fc_index = (
-            st.session_state.fc_index + 1
-        ) % len(vocab_list)
-        st.rerun()
+      # Rating Buttons on Answer Reveal
+      if st.session_state.show_answer:
+        st.markdown("### Rate recall:")
+        b1, b2, b3, b4 = st.columns(4)
 
-      with b1:
-        if st.button("🔴 Again", use_container_width=True):
-          next_card()
-      with b2:
-        if st.button("🟠 Hard", use_container_width=True):
-          next_card()
-      with b3:
-        if st.button("🟢 Good", use_container_width=True):
-          next_card()
-      with b4:
-        if st.button("⭐ Easy", use_container_width=True):
-          next_card()
+        def next_card():
+          st.session_state.show_answer = False
+          st.session_state.fc_index = (
+              st.session_state.fc_index + 1
+          ) % len(vocab_list)
+          st.rerun()
+
+        with b1:
+          if st.button("🔴 Again", use_container_width=True):
+            next_card()
+        with b2:
+          if st.button("🟠 Hard", use_container_width=True):
+            next_card()
+        with b3:
+          if st.button("🟢 Good", use_container_width=True):
+            next_card()
+        with b4:
+          if st.button("⭐ Easy", use_container_width=True):
+            next_card()
 
 # -------------------------------------------------------------
 # 2. MULTIPLE CHOICE QUIZ MODE
 # -------------------------------------------------------------
 elif app_mode == "Multiple Choice Quiz":
-  st.title("📝 Multiple Choice Quiz")
-  st.markdown(
-      "Test your knowledge with randomized multiple-choice questions."
-  )
+  st.title("📝 Quiz Mode")
 
   if "quiz_data" not in st.session_state:
     st.session_state.quiz_data = None
@@ -625,14 +648,12 @@ elif app_mode == "Multiple Choice Quiz":
     st.session_state.quiz_score = {"correct": 0, "total": 0}
 
   if (
-      st.button("Generate New Question")
+      st.button("⚡ Next Question", type="primary")
       or st.session_state.quiz_data is None
   ):
     vocab = st.session_state.vocab_list
     if len(vocab) < 4:
-      st.error(
-          "You need at least 4 words in the vocabulary list to generate a quiz."
-      )
+      st.error("Need at least 4 words in vocabulary list.")
     else:
       correct_word = random.choice(vocab)
       distractors = random.sample(
@@ -654,69 +675,77 @@ elif app_mode == "Multiple Choice Quiz":
     q = st.session_state.quiz_data
     correct = q["correct"]
 
-    st.markdown("---")
     if q["type"] == "cn_to_meaning":
       st.markdown(
-          f"### What is the meaning of: **{display_chinese(correct['chinese'])} ({correct['pinyin']})**?",
+          f"""
+                <div class="quizlet-card">
+                    <div class="card-label">What is the meaning & pinyin of:</div>
+                    <div class="main-text {font_class}">{correct['chinese']}</div>
+                </div>
+            """,
           unsafe_allow_html=True,
       )
     else:
-      st.markdown(f"### Which Chinese word means: **{correct['meaning']}**?")
+      st.markdown(
+          f"""
+                <div class="quizlet-card">
+                    <div class="card-label">Select the correct character for:</div>
+                    <div class="main-text">{correct['meaning']}</div>
+                    <div class="secondary-text">{correct['pinyin']}</div>
+                </div>
+            """,
+          unsafe_allow_html=True,
+      )
 
+    grid_col1, grid_col2 = st.columns(2)
     for i, opt in enumerate(q["options"]):
-      if q["type"] == "cn_to_meaning":
-        label = opt["meaning"]
-      else:
-        label = f"{opt['chinese']} ({opt['pinyin']})"
+      col = grid_col1 if i % 2 == 0 else grid_col2
 
-      if st.button(
-          (
-              label
-              if q["type"] == "cn_to_meaning"
-              else f"{opt['chinese']} ({opt['pinyin']})"
-          ),
-          key=f"opt_{i}",
-          use_container_width=True,
-      ):
-        q["answered"] = True
-        st.session_state.quiz_score["total"] += 1
-        if opt["id"] == correct["id"]:
-          st.session_state.quiz_score["correct"] += 1
-          st.success("Correct! 🎉")
-        else:
-          ans_text = (
-              correct["meaning"]
-              if q["type"] == "cn_to_meaning"
-              else f"{correct['chinese']} ({correct['pinyin']})"
-          )
-          st.error(f"Incorrect. The correct answer was: {ans_text}")
-        st.rerun()
+      label = (
+          f"{opt['meaning']} ({opt['pinyin']})"
+          if q["type"] == "cn_to_meaning"
+          else f"{opt['chinese']}"
+      )
 
-    if q["answered"]:
-      if st.button("Next Question ➡️", type="primary"):
-        st.session_state.quiz_data = None
-        st.rerun()
+      with col:
+        if st.button(label, key=f"opt_{i}", use_container_width=True):
+          q["answered"] = True
+          st.session_state.quiz_score["total"] += 1
+          if opt["id"] == correct["id"]:
+            st.session_state.quiz_score["correct"] += 1
+            st.success("Correct! 🎉")
+          else:
+            ans_text = (
+                f"{correct['meaning']} ({correct['pinyin']})"
+                if q["type"] == "cn_to_meaning"
+                else correct["chinese"]
+            )
+            st.error(f"Incorrect. Answer was: {ans_text}")
 
     st.markdown("---")
     score = st.session_state.quiz_score
     if score["total"] > 0:
       pct = (score["correct"] / score["total"]) * 100
-      st.write(
-          f"**Score:** {score['correct']} / {score['total']}"
-          f" ({pct:.1f}%)"
+      st.metric(
+          label="Score",
+          value=f"{score['correct']} / {score['total']}",
+          delta=f"{pct:.1f}%",
       )
 
 # -------------------------------------------------------------
 # 3. ADD NEW WORDS
 # -------------------------------------------------------------
 elif app_mode == "Add New Words":
-  st.title("➕ Add New Vocabulary Word")
-  st.markdown("Add custom vocabulary words to your HSK 1 study set.")
+  st.title("➕ Add Vocabulary")
 
   with st.form("add_word_form"):
-    new_chinese = st.text_input("Chinese Character(s):", placeholder="e.g. 咖啡")
-    new_pinyin = st.text_input("Pinyin:", placeholder="e.g. kāfēi")
-    new_meaning = st.text_input("English Meaning:", placeholder="e.g. coffee")
+    new_chinese = st.text_input(
+        "Chinese Character(s):", placeholder="e.g. 咖啡", key="cn_in"
+    )
+    new_pinyin = st.text_input("Pinyin:", placeholder="e.g. kāfēi", key="py_in")
+    new_meaning = st.text_input(
+        "English Meaning:", placeholder="e.g. coffee", key="mn_in"
+    )
     submitted = st.form_submit_button("Add Word")
 
     if submitted:
@@ -732,38 +761,25 @@ elif app_mode == "Add New Words":
             "pinyin": new_pinyin,
             "meaning": new_meaning,
         })
-        st.success(
-            f"Successfully added **{new_chinese} ({new_pinyin})** to your"
-            " vocabulary list!"
-        )
+        st.success(f"Added **{new_chinese} ({new_pinyin})** successfully!")
       else:
         st.error("Please fill in all fields.")
 
-  st.markdown("---")
-  st.subheader("Current Vocabulary Set")
-  st.write(f"Total words: {len(st.session_state.vocab_list)}")
-  if st.checkbox("Show all words"):
-    st.dataframe(st.session_state.vocab_list)
+  st.subheader("Current Vocabulary")
+  st.dataframe(st.session_state.vocab_list, use_container_width=True)
 
 # -------------------------------------------------------------
 # 4. AI TUTOR (GEMINI ASSISTANT)
 # -------------------------------------------------------------
 elif app_mode == "AI Tutor":
-  st.title("🤖 Gemini AI Chinese Tutor")
-  st.markdown(
-      "Ask questions about HSK 1 grammar, request example sentences, or get"
-      " help memorizing characters."
-  )
+  st.title("🤖 Gemini AI Tutor")
 
   api_key = st.sidebar.text_input(
       "Enter your Gemini API Key:", type="password"
   )
 
   if not api_key:
-    st.warning(
-        "Please enter your Google Gemini API key in the sidebar to use the AI"
-        " Tutor."
-    )
+    st.warning("Please enter your Gemini API key in the sidebar.")
   else:
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel("gemini-1.5-flash")
@@ -773,8 +789,8 @@ elif app_mode == "AI Tutor":
           {
               "role": "assistant",
               "content": (
-                  "Hello! I am your HSK 1 AI tutor. How can I help you learn"
-                  " Mandarin today?"
+                  "Hello! I am your HSK 1 AI tutor. Ask me anything about"
+                  " Chinese!"
               ),
           }
       ]
@@ -783,7 +799,7 @@ elif app_mode == "AI Tutor":
       with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-    if prompt := st.chat_input("Ask about HSK 1 words, grammar, or sentences..."):
+    if prompt := st.chat_input("Ask about HSK 1 words or grammar..."):
       st.session_state.messages.append({"role": "user", "content": prompt})
       with st.chat_message("user"):
         st.markdown(prompt)
@@ -793,8 +809,7 @@ elif app_mode == "AI Tutor":
           try:
             chat_context = (
                 "You are an expert HSK 1 Mandarin Chinese tutor. Help the user"
-                " with vocabulary, grammar, pinyin, and example sentences"
-                " appropriate for beginners."
+                " with vocabulary, grammar, pinyin, and example sentences."
             )
             full_prompt = f"{chat_context}\n\nUser Question: {prompt}"
             response = model.generate_content(full_prompt)
@@ -804,4 +819,4 @@ elif app_mode == "AI Tutor":
                 {"role": "assistant", "content": reply}
             )
           except Exception as e:
-            st.error(f"Error generating AI response: {e}")
+            st.error(f"Error: {e}")
