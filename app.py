@@ -7,37 +7,59 @@ st.set_page_config(
     page_title="HSK 1 Learning Hub", page_icon="🇨🇳", layout="wide"
 )
 
-# Custom Quizlet-like CSS styling with full-width card layout
+# Custom Quizlet & Duolingo-like CSS styling
 st.markdown(
     """
     <style>
-    /* Global Styles & Full Width Layout */
+    /* Global Styles & Spacing */
     .stApp {
         background-color: #F6F7FB;
     }
     
-    /* Hide default Streamlit padding/headers to maximize space */
     .block-container {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-        max-width: 100% !important;
+        padding-top: 3rem;
+        padding-bottom: 3rem;
+        max-width: 900px !important;
+        margin: auto;
     }
     
-    /* Full-screen Quizlet-style Card Container */
+    /* Top Bar / Progress Header */
+    .top-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #FFFFFF;
+        padding: 16px 24px;
+        border-radius: 16px;
+        border: 2px solid #E2E8F0;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+    
+    .stats-badge {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: #475569;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* Quizlet-style Card Container */
     .quizlet-card {
         background-color: #FFFFFF;
         border: 2px solid #E2E8F0;
         border-radius: 20px;
-        padding: 80px 40px;
+        padding: 60px 40px;
         box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
         text-align: center;
         width: 100%;
-        min-height: 400px;
+        min-height: 350px;
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        margin-bottom: 20px;
+        margin-bottom: 24px;
     }
     
     /* Typography sizing */
@@ -49,7 +71,7 @@ st.markdown(
         line-height: 1.2;
     }
     .secondary-text {
-        font-size: 2.8rem !important;
+        font-size: 2.2rem !important;
         font-weight: 500 !important;
         color: #3B82F6;
         margin-top: 12px;
@@ -62,8 +84,8 @@ st.markdown(
     div.stButton > button {
         border-radius: 12px !important;
         font-weight: 600 !important;
-        padding: 14px 28px !important;
-        font-size: 1.2rem !important;
+        padding: 12px 24px !important;
+        font-size: 1.1rem !important;
     }
     </style>
 """,
@@ -500,33 +522,98 @@ if "vocab_list" not in st.session_state:
       },
   ]
 
+# Initialize Session State Variables
 if "fc_index" not in st.session_state:
   st.session_state.fc_index = 0
 if "show_answer" not in st.session_state:
   st.session_state.show_answer = False
+if "exp" not in st.session_state:
+  st.session_state.exp = 0
+if "level" not in st.session_state:
+  st.session_state.level = 1
 
-# Sidebar Navigation & Settings
-st.sidebar.title("🟦 Quizlet HSK 1")
-app_mode = st.sidebar.radio(
-    "Choose Mode:",
-    [
-        "Flashcards",
-        "Multiple Choice Quiz",
-        "Add New Words",
-        "AI Tutor",
-    ],
-)
 
-st.sidebar.markdown("---")
-st.sidebar.subheader("🎨 Display Settings")
-font_choice = st.sidebar.selectbox(
-    "Chinese Font Style:", ("KaiTi (楷体)", "Standard / Sans-Serif")
-)
+# Helper function to compute EXP needed for next level (increases progressively)
+def get_exp_required(lvl):
+  return int(50 * (lvl**1.5))
 
-font_class = "kaiti-font" if font_choice == "KaiTi (楷体)" else ""
+
+# Add EXP function
+def add_exp(amount):
+  st.session_state.exp += amount
+  required = get_exp_required(st.session_state.level)
+  while st.session_state.exp >= required:
+    st.session_state.exp -= required
+    st.session_state.level += 1
+    required = get_exp_required(st.session_state.level)
+    st.balloons()
+
 
 # -------------------------------------------------------------
-# 1. FLASHCARDS MODE
+# TOP DUOLINGO-LIKE PROGRESS BAR HEADER
+# -------------------------------------------------------------
+current_lvl = st.session_state.level
+current_exp = st.session_state.exp
+req_exp = get_exp_required(current_lvl)
+progress_ratio = min(current_exp / req_exp, 1.0)
+
+st.markdown(
+    f"""
+    <div class="top-header">
+        <div class="stats-badge">🏆 Level {current_lvl}</div>
+        <div class="stats-badge">⭐ EXP: {current_exp} / {req_exp}</div>
+    </div>
+""",
+    unsafe_allow_html=True,
+)
+st.progress(progress_ratio)
+st.markdown("<br>", unsafe_allow_html=True)
+
+# -------------------------------------------------------------
+# MAIN SCREEN NAVIGATION (Replacing Sidebar)
+# -------------------------------------------------------------
+col_nav1, col_nav2, col_nav3, col_nav4, col_nav5 = st.columns(5)
+with col_nav1:
+  btn_fc = st.button("📇 Flashcards", use_container_width=True)
+with col_nav2:
+  btn_quiz = st.button("📝 Quiz", use_container_width=True)
+with col_nav3:
+  btn_add = st.button("➕ Add Words", use_container_width=True)
+with col_nav4:
+  btn_ai = st.button("🤖 AI Tutor", use_container_width=True)
+with col_nav5:
+  btn_settings = st.button("🎨 Font", use_container_width=True)
+
+# Handle Navigation State
+if "app_mode" not in st.session_state:
+  st.session_state.app_mode = "Flashcards"
+if "font_choice" not in st.session_state:
+  st.session_state.font_choice = "KaiTi (楷体)"
+
+if btn_fc:
+  st.session_state.app_mode = "Flashcards"
+if btn_quiz:
+  st.session_state.app_mode = "Multiple Choice Quiz"
+if btn_add:
+  st.session_state.app_mode = "Add New Words"
+if btn_ai:
+  st.session_state.app_mode = "AI Tutor"
+if btn_settings:
+  st.session_state.font_choice = (
+      "Standard / Sans-Serif"
+      if st.session_state.font_choice == "KaiTi (楷体)"
+      else "KaiTi (楷体)"
+  )
+
+app_mode = st.session_state.app_mode
+font_class = (
+    "kaiti-font" if st.session_state.font_choice == "KaiTi (楷体)" else ""
+)
+
+st.markdown("---")
+
+# -------------------------------------------------------------
+# 1. FLASHCARDS MODE (Chinese Front ➔ Meaning + Pinyin Back)
 # -------------------------------------------------------------
 if app_mode == "Flashcards":
   vocab_list = st.session_state.vocab_list
@@ -538,9 +625,21 @@ if app_mode == "Flashcards":
 
     current_card = vocab_list[st.session_state.fc_index]
 
-    # Full Width Flashcard UI
     if not st.session_state.show_answer:
-      # Front side: Meaning + Pinyin
+      # Front side: Chinese Character
+      st.markdown(
+          f"""
+                <div class="quizlet-card">
+                    <div class="main-text {font_class}">{current_card['chinese']}</div>
+                </div>
+            """,
+          unsafe_allow_html=True,
+      )
+      if st.button("🔄 Click to Flip", use_container_width=True):
+        st.session_state.show_answer = True
+        st.rerun()
+    else:
+      # Back side: Meaning + Pinyin
       st.markdown(
           f"""
                 <div class="quizlet-card">
@@ -550,26 +649,14 @@ if app_mode == "Flashcards":
             """,
           unsafe_allow_html=True,
       )
-      if st.button("🔄 Click to Flip", use_container_width=True):
-        st.session_state.show_answer = True
-        st.rerun()
-    else:
-      # Back side: Chinese Character
-      st.markdown(
-          f"""
-                <div class="quizlet-card">
-                    <div class="main-text {font_class}">{current_card['chinese']}</div>
-                </div>
-            """,
-          unsafe_allow_html=True,
-      )
 
     # Rating Buttons on Answer Reveal
     if st.session_state.show_answer:
-      st.markdown("### Rate recall:")
+      st.markdown("### Rate recall (+EXP earned):")
       b1, b2, b3, b4 = st.columns(4)
 
-      def next_card():
+      def next_card(earned_exp):
+        add_exp(earned_exp)
         st.session_state.show_answer = False
         st.session_state.fc_index = (
             st.session_state.fc_index + 1
@@ -577,31 +664,27 @@ if app_mode == "Flashcards":
         st.rerun()
 
       with b1:
-        if st.button("🔴 Again", use_container_width=True):
-          next_card()
+        if st.button("🔴 Again (+5)", use_container_width=True):
+          next_card(5)
       with b2:
-        if st.button("🟠 Hard", use_container_width=True):
-          next_card()
+        if st.button("🟠 Hard (+10)", use_container_width=True):
+          next_card(10)
       with b3:
-        if st.button("🟢 Good", use_container_width=True):
-          next_card()
+        if st.button("🟢 Good (+15)", use_container_width=True):
+          next_card(15)
       with b4:
-        if st.button("⭐ Easy", use_container_width=True):
-          next_card()
+        if st.button("⭐ Easy (+20)", use_container_width=True):
+          next_card(20)
 
 # -------------------------------------------------------------
 # 2. MULTIPLE CHOICE QUIZ MODE
 # -------------------------------------------------------------
 elif app_mode == "Multiple Choice Quiz":
-  st.title("📝 Quiz Mode")
-
   if "quiz_data" not in st.session_state:
     st.session_state.quiz_data = None
-  if "quiz_score" not in st.session_state:
-    st.session_state.quiz_score = {"correct": 0, "total": 0}
 
   if (
-      st.button("⚡ Next Question", type="primary")
+      st.button("⚡ Generate New Question", type="primary")
       or st.session_state.quiz_data is None
   ):
     vocab = st.session_state.vocab_list
@@ -653,7 +736,6 @@ elif app_mode == "Multiple Choice Quiz":
     grid_col1, grid_col2 = st.columns(2)
     for i, opt in enumerate(q["options"]):
       col = grid_col1 if i % 2 == 0 else grid_col2
-
       label = (
           f"{opt['meaning']} ({opt['pinyin']})"
           if q["type"] == "cn_to_meaning"
@@ -663,10 +745,9 @@ elif app_mode == "Multiple Choice Quiz":
       with col:
         if st.button(label, key=f"opt_{i}", use_container_width=True):
           q["answered"] = True
-          st.session_state.quiz_score["total"] += 1
           if opt["id"] == correct["id"]:
-            st.session_state.quiz_score["correct"] += 1
-            st.success("Correct! 🎉")
+            add_exp(25)
+            st.success("Correct! 🎉 (+25 EXP)")
           else:
             ans_text = (
                 f"{correct['meaning']} ({correct['pinyin']})"
@@ -674,16 +755,6 @@ elif app_mode == "Multiple Choice Quiz":
                 else correct["chinese"]
             )
             st.error(f"Incorrect. Answer was: {ans_text}")
-
-    st.markdown("---")
-    score = st.session_state.quiz_score
-    if score["total"] > 0:
-      pct = (score["correct"] / score["total"]) * 100
-      st.metric(
-          label="Score",
-          value=f"{score['correct']} / {score['total']}",
-          delta=f"{pct:.1f}%",
-      )
 
 # -------------------------------------------------------------
 # 3. ADD NEW WORDS
@@ -714,7 +785,8 @@ elif app_mode == "Add New Words":
             "pinyin": new_pinyin,
             "meaning": new_meaning,
         })
-        st.success(f"Added **{new_chinese} ({new_pinyin})** successfully!")
+        add_exp(10)
+        st.success(f"Added **{new_chinese} ({new_pinyin})** successfully! (+10 EXP)")
       else:
         st.error("Please fill in all fields.")
 
@@ -727,12 +799,10 @@ elif app_mode == "Add New Words":
 elif app_mode == "AI Tutor":
   st.title("🤖 Gemini AI Tutor")
 
-  api_key = st.sidebar.text_input(
-      "Enter your Gemini API Key:", type="password"
-  )
+  api_key = st.text_input("Enter your Gemini API Key:", type="password")
 
   if not api_key:
-    st.warning("Please enter your Gemini API key in the sidebar.")
+    st.warning("Please enter your Gemini API key above.")
   else:
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel("gemini-1.5-flash")
