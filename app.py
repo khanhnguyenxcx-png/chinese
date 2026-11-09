@@ -11,7 +11,7 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-    /* Lock viewport to completely prevent scrolling */
+    /* Lock viewport to completely prevent scrolling and fit screen */
     html, body, [data-testid="stAppViewContainer"], .stApp {
         overflow: hidden !important;
         height: 100vh !important;
@@ -21,13 +21,14 @@ st.markdown(
     
     /* Strict vertical layout fitting exact screen height */
     .block-container {
-        padding-top: 0.4rem !important;
-        padding-bottom: 0.4rem !important;
-        max-width: 900px !important;
+        padding-top: 0.3rem !important;
+        padding-bottom: 0.3rem !important;
+        max-width: 950px !important;
         height: 98vh !important;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
+        box-sizing: border-box;
     }
     
     /* Top Header Bar */
@@ -42,7 +43,7 @@ st.markdown(
         box-shadow: 0 2px 4px rgba(0,0,0,0.02);
     }
     
-    /* Visually Beautiful Duolingo-style Progress Bar */
+    /* Duolingo-style Progress Bar */
     .duo-progress-container {
         background-color: #E2E8F0;
         border-radius: 999px;
@@ -73,23 +74,24 @@ st.markdown(
         justify-content: center;
         align-items: center;
         margin: 4px 0;
+        overflow: hidden;
     }
     
     .chinese-text {
-        font-size: 5.5rem !important;
+        font-size: 6rem !important;
         font-weight: 700 !important;
         color: #1E293B;
         line-height: 1.1;
         margin: 0;
     }
     .meaning-text {
-        font-size: 2.2rem !important;
+        font-size: 2.5rem !important;
         font-weight: 600 !important;
         color: #1E293B;
         margin: 4px 0;
     }
     .pinyin-text {
-        font-size: 1.4rem !important;
+        font-size: 1.6rem !important;
         font-weight: 500 !important;
         color: #3B82F6;
         margin-top: 4px;
@@ -578,18 +580,25 @@ current_exp = st.session_state.exp
 req_exp = get_exp_required(current_lvl)
 progress_pct = min(int((current_exp / req_exp) * 100), 100)
 
-st.markdown(
-    f"""
-    <div class="top-bar">
-        <span style="font-weight: 700; color: #1E293B;">🏆 Level {current_lvl}</span>
-        <span style="font-weight: 600; color: #64748B;">⭐ {current_exp} / {req_exp} EXP</span>
-    </div>
-    <div class="duo-progress-container">
-        <div class="duo-progress-bar" style="width: {progress_pct}%;"></div>
-    </div>
-""",
-    unsafe_allow_html=True,
-)
+col_top1, col_top2 = st.columns([4, 1])
+with col_top1:
+  st.markdown(
+      f"""
+        <div class="top-bar">
+            <span style="font-weight: 700; color: #1E293B;">🏆 Level {current_lvl}</span>
+            <span style="font-weight: 600; color: #64748B;">⭐ EXP: {current_exp} / {req_exp}</span>
+        </div>
+        <div class="duo-progress-container">
+            <div class="duo-progress-bar" style="width: {progress_pct}%;"></div>
+        </div>
+    """,
+      unsafe_allow_html=True,
+  )
+with col_top2:
+  if st.button("🗑️ Reset Progress", use_container_width=True):
+    st.session_state.exp = 0
+    st.session_state.level = 1
+    st.rerun()
 
 # -------------------------------------------------------------
 # INLINE COMPACT NAVIGATION
@@ -602,6 +611,7 @@ with col_nav1:
 with col_nav2:
   if st.button("📝 Quiz", use_container_width=True):
     st.session_state.app_mode = "Quiz"
+    st.session_state.quiz_data = None
 with col_nav3:
   if st.button("➕ Add", use_container_width=True):
     st.session_state.app_mode = "Add"
@@ -682,16 +692,10 @@ if app_mode == "Flashcards":
           next_card(20)
 
 # -------------------------------------------------------------
-# 2. MULTIPLE CHOICE QUIZ MODE
+# 2. MULTIPLE CHOICE QUIZ MODE (Auto-advancing)
 # -------------------------------------------------------------
 elif app_mode == "Quiz":
-  if "quiz_data" not in st.session_state:
-    st.session_state.quiz_data = None
-
-  if (
-      st.button("⚡ New Question", type="primary")
-      or st.session_state.quiz_data is None
-  ):
+  if "quiz_data" not in st.session_state or st.session_state.quiz_data is None:
     vocab = st.session_state.vocab_list
     if len(vocab) >= 4:
       correct_word = random.choice(vocab)
@@ -706,9 +710,8 @@ elif app_mode == "Quiz":
           "options": options,
           "type": quiz_type,
       }
-      st.rerun()
 
-  if st.session_state.quiz_data:
+  if "quiz_data" in st.session_state and st.session_state.quiz_data:
     q = st.session_state.quiz_data
     correct = q["correct"]
 
@@ -745,14 +748,17 @@ elif app_mode == "Quiz":
         if st.button(label, key=f"q_opt_{i}", use_container_width=True):
           if opt["id"] == correct["id"]:
             add_exp(25)
-            st.success("Correct! 🎉 (+25 EXP)")
+            st.toast("Correct! 🎉 (+25 EXP)", icon="✅")
           else:
             ans = (
                 f"{correct['meaning']} ({correct['pinyin']})"
                 if q["type"] == "cn_to_meaning"
                 else correct["chinese"]
             )
-            st.error(f"Incorrect. Answer: {ans}")
+            st.toast(f"Incorrect. Answer: {ans}", icon="❌")
+          # Automatically trigger next question immediately
+          st.session_state.quiz_data = None
+          st.rerun()
 
 # -------------------------------------------------------------
 # 3. ADD NEW WORDS
