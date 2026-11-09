@@ -7,11 +7,11 @@ st.set_page_config(
     page_title="HSK 1 Learning Hub", page_icon="🇨🇳", layout="wide"
 )
 
-# Custom Ultra-Compact Non-Scrolling Viewport CSS
+# Custom Full-Screen Strict Non-Scrolling CSS
 st.markdown(
     """
     <style>
-    /* Lock viewport to completely prevent scrolling and fit screen */
+    /* Lock viewport to completely prevent scrolling and fit screen perfectly */
     html, body, [data-testid="stAppViewContainer"], .stApp {
         overflow: hidden !important;
         height: 100vh !important;
@@ -19,16 +19,16 @@ st.markdown(
         background-color: #F8FAFC;
     }
     
-    /* Strict vertical layout fitting exact screen height */
+    /* Strict vertical flex layout filling exact screen height */
     .block-container {
-        padding-top: 0.3rem !important;
-        padding-bottom: 0.3rem !important;
-        max-width: 950px !important;
+        padding-top: 0.4rem !important;
+        padding-bottom: 0.4rem !important;
+        max-width: 1000px !important;
         height: 98vh !important;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        box-sizing: border-box;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+        box-sizing: border-box !important;
     }
     
     /* Top Header Bar */
@@ -37,10 +37,11 @@ st.markdown(
         justify-content: space-between;
         align-items: center;
         background-color: #FFFFFF;
-        padding: 6px 16px;
-        border-radius: 10px;
+        padding: 8px 16px;
+        border-radius: 12px;
         border: 2px solid #E2E8F0;
         box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        font-size: 1.05rem;
     }
     
     /* Duolingo-style Progress Bar */
@@ -60,52 +61,55 @@ st.markdown(
         transition: width 0.4s ease-in-out;
     }
     
-    /* Screen-Filling Compact Card */
+    /* Screen-Filling Long Card */
     .compact-card {
         background-color: #FFFFFF;
         border: 2px solid #E2E8F0;
-        border-radius: 16px;
-        padding: 20px;
+        border-radius: 20px;
+        padding: 30px;
         text-align: center;
-        box-shadow: 0 6px 16px -4px rgba(0,0,0,0.04);
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        margin: 4px 0;
+        box-shadow: 0 8px 24px -4px rgba(0,0,0,0.06);
+        flex: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        align-items: center !important;
+        margin: 4px 0 !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
         overflow: hidden;
     }
     
     .chinese-text {
-        font-size: 6rem !important;
+        font-size: 7rem !important;
         font-weight: 700 !important;
         color: #1E293B;
         line-height: 1.1;
         margin: 0;
     }
     .meaning-text {
-        font-size: 2.5rem !important;
+        font-size: 3rem !important;
         font-weight: 600 !important;
         color: #1E293B;
-        margin: 4px 0;
+        margin: 6px 0;
     }
     .pinyin-text {
-        font-size: 1.6rem !important;
+        font-size: 1.8rem !important;
         font-weight: 500 !important;
         color: #3B82F6;
-        margin-top: 4px;
+        margin-top: 6px;
     }
     .kaiti-font {
         font-family: 'KaiTi', 'STKaiti', 'AR PL Kaiti M GB', serif !important;
     }
 
-    /* Compact Buttons */
+    /* Buttons Styling */
     div.stButton > button {
-        border-radius: 8px !important;
+        border-radius: 10px !important;
         font-weight: 600 !important;
-        padding: 8px 12px !important;
-        font-size: 0.95rem !important;
+        padding: 10px 16px !important;
+        font-size: 1rem !important;
+        width: 100%;
     }
     </style>
 """,
@@ -580,13 +584,13 @@ current_exp = st.session_state.exp
 req_exp = get_exp_required(current_lvl)
 progress_pct = min(int((current_exp / req_exp) * 100), 100)
 
-col_top1, col_top2 = st.columns([4, 1])
+col_top1, col_top2 = st.columns([5, 1])
 with col_top1:
   st.markdown(
       f"""
         <div class="top-bar">
             <span style="font-weight: 700; color: #1E293B;">🏆 Level {current_lvl}</span>
-            <span style="font-weight: 600; color: #64748B;">⭐ EXP: {current_exp} / {req_exp}</span>
+            <span style="font-weight: 600; color: #3B82F6;">⭐ EXP: {current_exp} / {req_exp}</span>
         </div>
         <div class="duo-progress-container">
             <div class="duo-progress-bar" style="width: {progress_pct}%;"></div>
@@ -595,7 +599,7 @@ with col_top1:
       unsafe_allow_html=True,
   )
 with col_top2:
-  if st.button("🗑️ Reset Progress", use_container_width=True):
+  if st.button("🗑️ Reset", use_container_width=True):
     st.session_state.exp = 0
     st.session_state.level = 1
     st.rerun()
@@ -718,9 +722,9 @@ elif app_mode == "Quiz":
     if q["type"] == "cn_to_meaning":
       st.markdown(
           f"""
-                <div class="compact-card" style="padding: 15px;">
-                    <div style="font-size: 0.85rem; color: #64748B;">What is the meaning & pinyin of:</div>
-                    <div class="chinese-text {font_class}" style="font-size: 4rem !important;">{correct['chinese']}</div>
+                <div class="compact-card">
+                    <div style="font-size: 0.9rem; color: #64748B; margin-bottom: 5px;">What is the meaning & pinyin of:</div>
+                    <div class="chinese-text {font_class}">{correct['chinese']}</div>
                 </div>
             """,
           unsafe_allow_html=True,
@@ -728,9 +732,9 @@ elif app_mode == "Quiz":
     else:
       st.markdown(
           f"""
-                <div class="compact-card" style="padding: 15px;">
-                    <div style="font-size: 0.85rem; color: #64748B;">Select character for:</div>
-                    <div class="meaning-text" style="font-size: 1.8rem !important;">{correct['meaning']} ({correct['pinyin']})</div>
+                <div class="compact-card">
+                    <div style="font-size: 0.9rem; color: #64748B; margin-bottom: 5px;">Select character for:</div>
+                    <div class="meaning-text">{correct['meaning']} ({correct['pinyin']})</div>
                 </div>
             """,
           unsafe_allow_html=True,
@@ -766,8 +770,8 @@ elif app_mode == "Quiz":
 elif app_mode == "Add":
   st.markdown(
       """
-        <div class="compact-card" style="padding: 20px; justify-content: flex-start;">
-            <h3 style="margin-bottom: 10px;">➕ Add Custom Word</h3>
+        <div class="compact-card" style="justify-content: flex-start !important;">
+            <h3 style="margin-bottom: 15px;">➕ Add Custom Word</h3>
     """,
       unsafe_allow_html=True,
   )
@@ -802,8 +806,8 @@ elif app_mode == "Add":
 elif app_mode == "AI":
   st.markdown(
       """
-        <div class="compact-card" style="padding: 15px; justify-content: flex-start;">
-            <h3 style="margin-bottom: 5px;">🤖 Gemini AI Tutor</h3>
+        <div class="compact-card" style="justify-content: flex-start !important;">
+            <h3 style="margin-bottom: 10px;">🤖 Gemini AI Tutor</h3>
     """,
       unsafe_allow_html=True,
   )
