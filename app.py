@@ -7,7 +7,7 @@ st.set_page_config(
     page_title="HSK 1 Learning Hub", page_icon="🇨🇳", layout="wide"
 )
 
-# Custom Compact UI & Duolingo-style Progress Bar CSS
+# Custom Ultra-Compact Full-Screen CSS
 st.markdown(
     """
     <style>
@@ -15,35 +15,35 @@ st.markdown(
         background-color: #F8FAFC;
     }
     
-    /* Force compact layout to eliminate scrolling */
+    /* Remove default Streamlit top/bottom padding to leave only a tiny bit of space */
     .block-container {
-        padding-top: 1.5rem !important;
-        padding-bottom: 1rem !important;
-        max-width: 900px !important;
+        padding-top: 0.4rem !important;
+        padding-bottom: 0.4rem !important;
+        max-width: 1000px !important;
         margin: auto;
     }
     
-    /* Top Header & Navigation Bar */
+    /* Top Header Bar */
     .top-bar {
         display: flex;
         justify-content: space-between;
         align-items: center;
         background-color: #FFFFFF;
-        padding: 12px 20px;
-        border-radius: 14px;
+        padding: 8px 16px;
+        border-radius: 12px;
         border: 2px solid #E2E8F0;
-        margin-bottom: 12px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        margin-bottom: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
     }
     
     /* Beautiful Duolingo-style Progress Bar */
     .duo-progress-container {
         background-color: #E2E8F0;
         border-radius: 999px;
-        height: 16px;
+        height: 14px;
         width: 100%;
         overflow: hidden;
-        margin-bottom: 16px;
+        margin-bottom: 10px;
         box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
     }
     .duo-progress-bar {
@@ -53,16 +53,16 @@ st.markdown(
         transition: width 0.4s ease-in-out;
     }
     
-    /* Compact Flashcard Container */
+    /* Immersive Full-Screen Fill Card */
     .compact-card {
         background-color: #FFFFFF;
         border: 2px solid #E2E8F0;
-        border-radius: 16px;
-        padding: 35px 20px;
+        border-radius: 18px;
+        padding: 40px 20px;
         text-align: center;
-        box-shadow: 0 8px 20px -4px rgba(0,0,0,0.04);
-        margin-bottom: 16px;
-        min-height: 220px;
+        box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
+        margin-bottom: 10px;
+        min-height: calc(100vh - 240px);
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -70,23 +70,23 @@ st.markdown(
     }
     
     .chinese-text {
-        font-size: 4.5rem !important;
+        font-size: 6rem !important;
         font-weight: 700 !important;
         color: #1E293B;
         line-height: 1.1;
         margin: 0;
     }
     .meaning-text {
-        font-size: 2rem !important;
+        font-size: 2.5rem !important;
         font-weight: 600 !important;
         color: #1E293B;
-        margin: 4px 0;
+        margin: 6px 0;
     }
     .pinyin-text {
-        font-size: 1.4rem !important;
+        font-size: 1.6rem !important;
         font-weight: 500 !important;
         color: #3B82F6;
-        margin-top: 4px;
+        margin-top: 6px;
     }
     .kaiti-font {
         font-family: 'KaiTi', 'STKaiti', 'AR PL Kaiti M GB', serif !important;
@@ -96,7 +96,7 @@ st.markdown(
     div.stButton > button {
         border-radius: 10px !important;
         font-weight: 600 !important;
-        padding: 8px 16px !important;
+        padding: 10px 16px !important;
         font-size: 1rem !important;
     }
     </style>
@@ -585,7 +585,7 @@ st.markdown(
 )
 
 # -------------------------------------------------------------
-# INLINE COMPACT NAVIGATION (Replacing Sidebar)
+# INLINE COMPACT NAVIGATION
 # -------------------------------------------------------------
 col_nav1, col_nav2, col_nav3, col_nav4, col_nav5 = st.columns(5)
 with col_nav1:
@@ -708,9 +708,9 @@ elif app_mode == "Quiz":
     if q["type"] == "cn_to_meaning":
       st.markdown(
           f"""
-                <div class="compact-card" style="min-height: 150px; padding: 20px;">
+                <div class="compact-card" style="min-height: calc(100vh - 300px); padding: 20px;">
                     <div style="font-size: 0.9rem; color: #64748B;">What is the meaning & pinyin of:</div>
-                    <div class="chinese-text {font_class}" style="font-size: 3rem !important;">{correct['chinese']}</div>
+                    <div class="chinese-text {font_class}" style="font-size: 4.5rem !important;">{correct['chinese']}</div>
                 </div>
             """,
           unsafe_allow_html=True,
@@ -718,9 +718,9 @@ elif app_mode == "Quiz":
     else:
       st.markdown(
           f"""
-                <div class="compact-card" style="min-height: 150px; padding: 20px;">
+                <div class="compact-card" style="min-height: calc(100vh - 300px); padding: 20px;">
                     <div style="font-size: 0.9rem; color: #64748B;">Select character for:</div>
-                    <div class="meaning-text" style="font-size: 1.5rem !important;">{correct['meaning']} ({correct['pinyin']})</div>
+                    <div class="meaning-text" style="font-size: 2rem !important;">{correct['meaning']} ({correct['pinyin']})</div>
                 </div>
             """,
           unsafe_allow_html=True,
@@ -751,7 +751,13 @@ elif app_mode == "Quiz":
 # 3. ADD NEW WORDS
 # -------------------------------------------------------------
 elif app_mode == "Add":
-  st.markdown("### ➕ Add Custom Word")
+  st.markdown(
+      """
+        <div class="compact-card" style="min-height: calc(100vh - 200px); padding: 30px; justify-content: flex-start;">
+            <h3 style="margin-bottom: 20px;">➕ Add Custom Word</h3>
+    """,
+      unsafe_allow_html=True,
+  )
   with st.form("add_form", clear_on_submit=True):
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -775,12 +781,19 @@ elif app_mode == "Add":
         st.success(f"Added {nc} successfully!")
       else:
         st.error("Please fill all fields.")
+  st.markdown("</div>", unsafe_allow_html=True)
 
 # -------------------------------------------------------------
 # 4. AI TUTOR (GEMINI ASSISTANT)
 # -------------------------------------------------------------
 elif app_mode == "AI":
-  st.markdown("### 🤖 Gemini AI Tutor")
+  st.markdown(
+      """
+        <div class="compact-card" style="min-height: calc(100vh - 200px); padding: 25px; justify-content: flex-start;">
+            <h3 style="margin-bottom: 10px;">🤖 Gemini AI Tutor</h3>
+    """,
+      unsafe_allow_html=True,
+  )
   api_key = st.text_input(
       "Gemini API Key:", type="password", placeholder="Enter key..."
   )
@@ -793,7 +806,7 @@ elif app_mode == "AI":
           "content": "Hello! Ask me any HSK 1 question.",
       }]
 
-    for m in st.session_state.messages[-2:]:  # Keep compact view
+    for m in st.session_state.messages[-2:]:
       st.write(f"**{m['role'].capitalize()}**: {m['content']}")
 
     prompt = st.text_input("Ask question:", placeholder="e.g. How to use 的?")
@@ -811,3 +824,4 @@ elif app_mode == "AI":
         st.error(f"Error: {e}")
   else:
     st.info("Enter your Gemini API key above to chat with the AI tutor.")
+  st.markdown("</div>", unsafe_allow_html=True)
